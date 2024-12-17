@@ -10,13 +10,13 @@ def index():
     if request.method == "POST":
         name = request.form["name"]
         template_path = "Korina Villanueva.png"  # Template image
-        output_path = "generated_certificate.png"
+        output_path = "generated_certificate.pdf"
 
         # Generate the certificate with the name
         generate_certificate(template_path, name, output_path)
 
         return send_file(
-            output_path, as_attachment=True, download_name="certificate.png"
+            output_path, as_attachment=True, download_name="certificate.pdf"
         )
     return render_template("index.html")
 
