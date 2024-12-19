@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, send_file
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
+from reportlab.pdfgen import canvas
 import os
 
 app = Flask(__name__)
@@ -9,11 +10,11 @@ app = Flask(__name__)
 def index():
     if request.method == "POST":
         name = request.form["name"]
-        template_path = "Korina Villanueva.png"  # Template image
-        output_path = "generated_certificate.pdf"
+        template_path = r"certificate-generator-app\Korina Villanueva.png"  # Template image
+        output_path = "generated_certs.pdf"  # Output PDF
 
-        # Generate the certificate with the name
-        generate_certificate(template_path, name, output_path)
+        # Generate the certificate as a PDF
+        generate_certificate_pdf(template_path, name, output_path)
 
         return send_file(
             output_path, as_attachment=True, download_name="certificate.pdf"
@@ -21,25 +22,33 @@ def index():
     return render_template("index.html")
 
 
-def generate_certificate(template_path, name, output_path):
+def generate_certificate_pdf(template_path, name, output_path):
+    # Check if the template file exists
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Template not found at {template_path}")
+
     # Load the certificate template
-    image = Image.open(template_path)
-    draw = ImageDraw.Draw(image)
+    template_image = Image.open(template_path)
+    width, height = template_image.size
 
-    # Define font and text position
-    font_path = "goodvibes.ttf"  # Path to a TTF font file
-    font_size = 50
-    font = ImageFont.truetype(font_path, font_size)
+    # Save the template image as a background for the PDF
+    temp_background = "temp_background.png"
+    template_image.save(temp_background)
 
-    text = name
-    text_position = (500, 520)  # Adjust to fit the specific space
-    text_color = (0, 0, 0)  # Black color for text
+    # Create a new PDF with the template as the background
+    c = canvas.Canvas(output_path, pagesize=(width, height))
+    c.drawImage(temp_background, 0, 0, width, height)
 
-    # Insert the recipient's name into the template
-    draw.text(text_position, text, fill=text_color, font=font)
+    # Add the recipient's name
+    c.setFont("Helvetica-Bold", 50)  # Adjust font style and size as needed
+    name_x, name_y = 500, 520  # Coordinates for the name
+    c.drawString(name_x, name_y, name)
 
-    # Save the modified certificate
-    image.save(output_path)
+    # Save the PDF
+    c.save()
+
+    # Remove the temporary background image
+    os.remove(temp_background)
 
 
 if __name__ == "__main__":
