@@ -42,6 +42,29 @@
             font-weight: bold;
         }
 
+        /* Information Message Styling */
+        .info-message {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        /* Flash Message Styling */
+        .flash {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .flash-error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+
         /* Label Styling */
         label {
             display: block;
@@ -106,11 +129,30 @@
 <body>
     <div class="container">
         <h1>Certificate Generator</h1>
-        <form method="POST">
+
+        <!-- Information Message -->
+        <p class="info-message">
+            Enter the recipient's name below and click "Generate Certificate." The certificate will be automatically downloaded.
+        </p>
+
+        <!-- Flash Message for Success or Errors -->
+        {% if success %}
+            <p>Certificate generated successfully!</p>
+            <a href="{{ download_link }}">Download Certificate</a>
+        {% elif error %}
+            <div class="flash flash-error">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <!-- Certificate Generation Form -->
+        <form method="POST" action="/">
             <label for="name">Enter Recipient's Name:</label>
             <input type="text" id="name" name="name" placeholder="Enter name here" required>
             <button type="submit">Generate Certificate</button>
         </form>
+
+        <!-- Footer -->
         <div class="footer">
             <p>Powered by <a href="#">Your Company</a></p>
         </div>
