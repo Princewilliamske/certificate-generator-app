@@ -91,7 +91,7 @@ def generate_certificate_pdf(template_path, name, output_path):
     c.drawImage(temp_background, x_offset, y_offset, resized_width, resized_height)
 
     # Add the recipient's name using the "Good Vibes" font
-    c.setFont("GoodVibes", 38.5)  # Adjust font size for A4
+    c.setFont("GoodVibes", 39.5)  # Adjust font size for A4
     name_x = a4_width / 2  # Center the name horizontally
     name_y = y_offset + resized_height / 1.8999  # Adjust vertical position within the image
     c.drawCentredString(name_x, name_y, name)
