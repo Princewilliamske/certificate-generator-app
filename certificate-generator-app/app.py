@@ -18,6 +18,8 @@ if not os.path.exists(CERTIFICATES_DIR):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    preview_link = None  # Variable to store preview link
+
     if request.method == "POST":
         try:
             # Get recipient name from form
@@ -30,13 +32,14 @@ def index():
             # Generate and save the certificate
             generate_certificate_pdf(template_path, name, output_file)
 
-            # Provide a link to download the certificate
+            # Provide links for preview and download
+            preview_link = url_for("view_certificate", filename=f"{name}_certificate.pdf")
             download_link = url_for("download_certificate", filename=f"{name}_certificate.pdf")
 
-            return render_template("index.html", success=True, download_link=download_link)
+            return render_template("index.html", success=True, preview_link=preview_link, download_link=download_link)
 
         except Exception as e:
-            # If an error occurs, return to the form with error message
+            # If an error occurs, return to the form with an error message
             return render_template("index.html", error=str(e))
 
     return render_template("index.html")
@@ -55,6 +58,16 @@ def download_certificate(filename):
         download_name=filename,
         mimetype="application/pdf",
     )
+
+
+@app.route("/view/<filename>")
+def view_certificate(filename):
+    """Route to view a saved certificate."""
+    file_path = os.path.join(CERTIFICATES_DIR, filename)
+    if not os.path.exists(file_path):
+        return "File not found!", 404
+
+    return send_file(file_path, mimetype="application/pdf")
 
 
 def generate_certificate_pdf(template_path, name, output_path):
@@ -78,7 +91,7 @@ def generate_certificate_pdf(template_path, name, output_path):
     aspect_ratio = min(a4_width / template_width, a4_height / template_height)
     resized_width = int(template_width * aspect_ratio)
     resized_height = int(template_height * aspect_ratio)
-    template_image = template_image.resize((resized_width, resized_height),  Image.Resampling.LANCZOS)
+    template_image = template_image.resize((resized_width, resized_height), Image.Resampling.LANCZOS)
 
     # Save the resized template image as a temporary background
     temp_background = "temp_background.png"
