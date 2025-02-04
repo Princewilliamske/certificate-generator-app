@@ -119,6 +119,6 @@ def generate_certificate_pdf(template_path, name, output_path):
     # Save and clean up
     c.save()
     os.remove(temp_background)
-
+    
 if __name__ == "__main__":
     app.run(debug=True)
