@@ -26,7 +26,7 @@ def index():
             name = request.form["name"]
 
             # Paths and file details
-            template_path = r"certificate-generator-app/template_certificate.png"  # Template image
+            template_path = os.path.abspath(os.path.join(os.getcwd(), "template_certificate.png"))
             output_file = os.path.join(CERTIFICATES_DIR, f"{name}_certificate.pdf")  # Save certificate on the server
 
             # Generate and save the certificate
@@ -77,44 +77,48 @@ def generate_certificate_pdf(template_path, name, output_path):
         raise FileNotFoundError(f"Template not found at {template_path}")
 
     # Load the "Good Vibes" font
-    font_path = "certificate-generator-app/templates/goodvibes.ttf"  # Update with the actual path to the font file
+    font_path = "templates/goodvibes.ttf"  # Update with the actual path to the font file
     if not os.path.exists(font_path):
         raise FileNotFoundError(f"Font not found at {font_path}")
     pdfmetrics.registerFont(TTFont("GoodVibes", font_path))
 
-    # Load the certificate template
-    template_image = Image.open(template_path)
+    # Load and ensure image is in high quality
+    template_image = Image.open(template_path).convert("RGB")  
     template_width, template_height = template_image.size
 
-    # Resize the image proportionally to fit within A4 size
+    # Maintain high DPI for clarity
+    dpi = 300
     a4_width, a4_height = A4
     aspect_ratio = min(a4_width / template_width, a4_height / template_height)
-    resized_width = int(template_width * aspect_ratio)
-    resized_height = int(template_height * aspect_ratio)
+    resized_width = int(template_width * aspect_ratio * 1.2)  # Adjust for better clarity
+    resized_height = int(template_height * aspect_ratio * 1.2)
+
+    # Resize without quality loss
     template_image = template_image.resize((resized_width, resized_height), Image.Resampling.LANCZOS)
 
-    # Save the resized template image as a temporary background
+    # Save the resized image with high DPI
     temp_background = "temp_background.png"
-    template_image.save(temp_background)
+    template_image.save(temp_background, dpi=(dpi, dpi))
 
-    # Create a new PDF with A4 page size
+    # Create high-quality PDF
     c = canvas.Canvas(output_path, pagesize=A4)
-    x_offset = (a4_width - resized_width) / 2  # Center the image horizontally
-    y_offset = (a4_height - resized_height) / 2  # Center the image vertically
-    c.drawImage(temp_background, x_offset, y_offset, resized_width, resized_height)
+    c.setAuthor("Certificate Generator")
+    c.setTitle("Award Certificate")
 
-    # Add the recipient's name using the "Good Vibes" font
-    c.setFont("GoodVibes", 39.5)  # Adjust font size for A4
-    name_x = a4_width / 2  # Center the name horizontally
-    name_y = y_offset + resized_height / 1.8999  # Adjust vertical position within the image
+    # Center the image
+    x_offset = (a4_width - resized_width) / 2
+    y_offset = (a4_height - resized_height) / 2
+    c.drawImage(temp_background, x_offset, y_offset, resized_width, resized_height, mask=None)
+
+    # Add recipient's name
+    c.setFont("GoodVibes", 39.5)
+    name_x = a4_width / 2
+    name_y = y_offset + resized_height / 1.8999
     c.drawCentredString(name_x, name_y, name)
 
-    # Save the PDF
+    # Save and clean up
     c.save()
-
-    # Remove the temporary background image
     os.remove(temp_background)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
